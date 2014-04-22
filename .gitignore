@@ -1,0 +1,4 @@
+*.o
+*~
+video_cut_detection.app/
+moc*
