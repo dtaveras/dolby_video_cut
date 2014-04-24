@@ -7,7 +7,7 @@
 #include <QThread>
 #include <QObject>
 #include "Worker.h"
-#include "QCustomGraph/qcustomplot.h"
+#include "QCustomGraph/qcustomplotwidget.h"
 #include <QDebug>
 
 #define WIND_WIDTH 800
@@ -21,6 +21,7 @@ int main( int argc, char **argv )
   QWidget* window = new QWidget;
   window->setWindowTitle("Video Transition Detector");
   window->setMinimumSize(WIND_WIDTH, WIND_HEIGHT);
+  window->setStyleSheet("background-color: #353439;");
 
   GLWindow* rGLWindow = new GLWindow(window);
   rGLWindow->setFocusPolicy(Qt::StrongFocus);
@@ -31,26 +32,27 @@ int main( int argc, char **argv )
   graphFrame->setStyleSheet("background-color: #2B2E3F");
 
   //Set Custom Plot which shows the time vs score
-  QCustomPlot* customPlot = new QCustomPlot;
-  QVector<double> x(101), y(101); // initialize with entries 0..100
-  for (int i=0; i<101; ++i)
-  {
-    x[i] = i/50.0 - 1; // x goes from -1 to 1
-    y[i] = x[i]*x[i];  // let's plot a quadratic function
-  }
+  QCustomPlotWidget* customPlot = new QCustomPlotWidget;
 
+  /*customPlot->plotLayout()->insertRow(0);
+  customPlot->plotLayout()->addElement(0, 0, new QCPPlotTitle(customPlot, "Regenerat \
+  ive Energies"));*/
   customPlot->setMinimumSize(WIND_WIDTH, GRAPH_HEIGHT);
   customPlot->setMaximumSize(WIND_WIDTH, GRAPH_HEIGHT);
   customPlot->rescaleAxes(true);
   // create graph and assign data to it:
   customPlot->addGraph();
-  customPlot->graph(0)->setData(x, y);
-  // give the axes some labels:
-  //customPlot->xAxis->setLabel("x");
-  //customPlot->yAxis->setLabel("y");
+
+  //Remove the x y labels and ticks
+  customPlot->rescaleAxes();
+  //customPlot->yAxis->setTicks(false);
+  //customPlot->yAxis->setTickLabels(false);
+  //customPlot->xAxis->setTickLabels(false);
+
   // set axes ranges, so we see all data:
-  customPlot->xAxis->setRange(-1, 1);
-  customPlot->yAxis->setRange(0, 1);
+  //customPlot->xAxis->setRange(0, 275);
+  //customPlot->yAxis->setRange(0, 300);
+  customPlot->axisRect(0)->setBackground(QBrush(QColor(43, 46, 63, 127)));
 
   QVBoxLayout* mainLayout = new QVBoxLayout;
   mainLayout->addWidget(rGLWindow);
@@ -63,7 +65,12 @@ int main( int argc, char **argv )
 
   QObject::connect(rGLWindow, SIGNAL(frameChanged()), worker, SLOT(process_next_frame()));
   QObject::connect(thread, SIGNAL(started()), worker, SLOT(process_next_frame()));
+
+  // Connect Updates
   QObject::connect(worker, SIGNAL(updateGLView(QImage)), rGLWindow, SLOT(updateFrame(QImage)));
+  qRegisterMetaType<dataVector>("dataVector");
+  QObject::connect(worker, SIGNAL(updateData(dataVector,dataVector)), customPlot, SLOT(updateGraphData(dataVector,dataVector)) );
+  QObject::connect(worker, SIGNAL(updateAddData(double,double)), customPlot, SLOT(addGraphData(double,double)) );
   
   thread->start();
 

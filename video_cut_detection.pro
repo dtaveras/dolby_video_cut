@@ -12,9 +12,11 @@ QT += opengl
 # Input
 HEADERS += glWindow.h \
            Worker.h \
-           QCustomGraph/qcustomplot.h
+           QCustomGraph/qcustomplot.h \
+           QCustomGraph/qcustomplotwidget.h
 
 SOURCES += glWindow.cpp \
            main.cpp \
            Worker.cpp \
-           QCustomGraph/qcustomplot.cpp
+           QCustomGraph/qcustomplot.cpp \
+           QCustomGraph/qcustomplotwidget.cpp

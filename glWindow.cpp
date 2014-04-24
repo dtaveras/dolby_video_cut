@@ -21,7 +21,7 @@ void GLWindow::keyPressEvent(QKeyEvent *kEvent)
 }
 
 void GLWindow::updateFrame(QImage frame){
-  qDebug() << "Updating Frame";
+  //qDebug() << "Updating Frame";
   m_GLFrame = QGLWidget::convertToGLFormat(frame);
   this->updateGL();
 }
