@@ -1,8 +1,11 @@
 #include "Worker.h"
 #include <QDebug>
 
+float calculate_score(float* f1, float* f2, int N);
+
 Worker::Worker(){
-  this->videoCaptured= VideoCapture("/Users/delvistaveras/Desktop/Dolby_Video/video-input-psnr-ssim/video/Megamind.avi"); // open the video file for reading
+  //this->videoCaptured= VideoCapture("Megamind.avi"); // open the video file for reading
+  this->videoCaptured= VideoCapture("changes.avi"); // open the video file for reading
   this->count = 0.0;
 }
 
@@ -19,6 +22,7 @@ void Worker::process_next_frame(){
       emit updateAddData(this->count, score);
     }
     else{
+      qDebug() << "[Rows: " << cvFrame.rows << "Cols: " << cvFrame.cols << "]";
       emit updateAddData(this->count, 0);
     }
 
@@ -51,3 +55,32 @@ double Worker::normal_psnr(Mat frame1, Mat frame2){
   return psnr;
 }
 
+void copyMatToArray(Mat M, float* arr){
+  int c = 0;
+  MatConstIterator_<Vec3f> it = M.begin<Vec3f>(), it_end = M.end<Vec3f>();
+  for(; it != it_end; ++it){
+    arr[c] = (*it)[0];
+    arr[c+1] = (*it)[1];
+    arr[c+2] = (*it)[2];
+    c += 3;
+  }
+}
+
+double Worker::cuda_psnr(Mat f1, Mat f2){
+  double psnr = 0;
+  int r = f1.rows;
+  int c = f1.cols;
+  int ch = f1.channels();
+  float* arr1 = (float*)malloc(sizeof(float)*r*c*ch);
+  float* arr2 = (float*)malloc(sizeof(float)*r*c*ch);
+  copyMatToArray(f1,arr1);
+  copyMatToArray(f2,arr2);
+  double sse = (double)calculate_score(arr1,arr2,r*c*ch);
+  if( sse <= 1e-10) // for small values return zero
+    psnr = 0;
+  else
+    {
+      double mse  = sse / (double)(f1.channels() * f1.total());
+      psnr = 10.0 * log10((255 * 255) / mse);
+    }
+}

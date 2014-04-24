@@ -58,7 +58,7 @@ int main( int argc, char **argv )
   mainLayout->addWidget(rGLWindow);
   mainLayout->addWidget(customPlot);
   window->setLayout(mainLayout);
-  
+
   QThread* thread = new QThread;
   Worker* worker = new Worker();
   worker->moveToThread(thread);
